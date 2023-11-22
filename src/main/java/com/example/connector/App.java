@@ -1,9 +1,5 @@
-package com.example.com;
+package com.example.connector;
 
-/**
- * Hello world!
- *
- */
 public class App 
 {
     public static void main( String[] args )

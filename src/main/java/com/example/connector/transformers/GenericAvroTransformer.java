@@ -5,13 +5,9 @@ import org.apache.kafka.common.cache.LRUCache;
 import org.apache.kafka.common.cache.SynchronizedCache;
 import org.apache.kafka.common.config.ConfigDef;
 import org.apache.kafka.connect.connector.ConnectRecord;
-import org.apache.kafka.connect.data.Field;
 import org.apache.kafka.connect.data.Schema;
-import org.apache.kafka.connect.data.SchemaBuilder;
-import org.apache.kafka.connect.data.Struct;
 
 import org.apache.kafka.connect.transforms.Transformation;
-import org.apache.kafka.connect.transforms.util.SchemaUtil;
 import org.apache.kafka.connect.transforms.util.SimpleConfig;
 
 import java.util.Map;
@@ -35,11 +31,13 @@ public abstract class GenericAvroTransformer<R extends ConnectRecord<R>> impleme
         .define(ConfigName.GENERIC_ENDPOINT, ConfigDef.Type.STRING, "endpoint", ConfigDef.Importance.HIGH,
         "Table name without schema");
 
+    @SuppressWarnings("unused")
     private static final String PURPOSE = "Put the data in the correct format";
 
     private String origin;
     private String endpoint;
 
+    @SuppressWarnings("unused")
     private Cache<Schema, Schema> schemaUpdateCache;
 
     @Override
@@ -53,7 +51,7 @@ public abstract class GenericAvroTransformer<R extends ConnectRecord<R>> impleme
 
     @Override
     public R apply(R record) {
-        GenericAvroUtil genericAvroUtil = new GenericAvroUtil<>();
+        GenericAvroUtil<R> genericAvroUtil = new GenericAvroUtil<R>();
         GenericAvroDto genericAvroDto = genericAvroUtil.getGenericAvroDto(record, endpoint, origin);
         return newRecord(record, null, genericAvroDto); 
     }

@@ -1,0 +1,26 @@
+curl -i -X PUT -H  "Content-Type:application/json" \
+    http://localhost:8083/connectors/my-connector/config/ \
+    -d '{
+            "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+            "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+            "value.converter.schemas.enable": "false",
+			"output.data.format": "JSON",
+			"output.key.format": "JSON",
+            "database.hostname": "postgres",
+            "database.port": "5432",
+            "database.user": "postgres",
+            "database.password": "admin",
+			"database.dbname": "test",
+			"database.server.name": "Gluon_marketplace",
+            "database.history.kafka.bootstrap.servers": "kafka:19092",
+            "database.history.kafka.topic": "test.demo",
+			"topic.prefix": "Gluon_marketplace",
+            "topic.creation.default.replication.factor": "3",
+            "topic.creation.default.partitions": "3",
+            "decimal.handling.mode": "double",
+            "include.schema.changes": "true",
+			"publication.autocreate.mode": "all_tables",
+			"tasks.max": "1",
+			"topic.creation.enable": "true",
+			"plugin.name": "pgoutput"
+    }'

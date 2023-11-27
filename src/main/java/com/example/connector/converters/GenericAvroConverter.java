@@ -1,7 +1,6 @@
 package com.example.connector.converters;
 
 import io.confluent.connect.avro.AvroData;
-import java.io.File;
 import java.io.IOException;
 import java.io.ByteArrayOutputStream;
 import java.util.Map;
@@ -15,7 +14,6 @@ import org.apache.avro.file.CodecFactory;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.reflect.ReflectData;
-import org.apache.avro.reflect.ReflectDatumWriter;
 import org.apache.avro.file.SeekableByteArrayInput;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaAndValue;
@@ -31,6 +29,8 @@ public class GenericAvroConverter implements Converter{
 
     private Integer schemaCacheSize = 50;
     private org.apache.avro.Schema avroSchema = null;
+
+    @SuppressWarnings("unused")
     private Schema connectSchema = null;
     private AvroData avroDataHelper = null;
 
@@ -103,10 +103,14 @@ public class GenericAvroConverter implements Converter{
             if (avroSchema != null) {
                 return avroDataHelper.toConnectData(avroSchema, instance);
             } else {
-                return avroDataHelper.toConnectData(instance.getSchema(), instance);
+                if(instance != null){
+                    return avroDataHelper.toConnectData(instance.getSchema(), instance);
+                } else {
+                    throw new NullPointerException();
+                }
             }
         } catch (IOException ioe) {
-            throw new DataException("Failed to deserialize Avro data from topic %s :".format(topic), ioe);
+            throw new DataException("Failed to deserialize Avro data from topic %s :" + String.format(topic), ioe);
         }
     }
 }

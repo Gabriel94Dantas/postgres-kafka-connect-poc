@@ -23,12 +23,30 @@ services:
       CONNECT_OFFSET_FLUSH_INTERVAL_MS: 10000
       CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 1
       CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 1
-      CONNECT_KEY_CONVERTER: com.example.connector.converters.GenericAvroConverter
-      CONNECT_VALUE_CONVERTER: com.example.connector.converters.GenericAvroConverter
+      GENERIC_CONVERTER_SCHEMA_SIZE: 50
+      CONNECT_KEY_CONVERTER_SCHEMA_REGISTRY_URL: schema_registry:8081
+      CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: schema_registry:8081
+      CONNECT_VALUE_CONVERTER: io.confluent.connect.avro.AvroConverter
+      CONNECT_KEY_CONVERTER: io.confluent.connect.avro.AvroConverter 
       CONNECT_PLUGIN_PATH: "/usr/share/java,/usr/share/confluent-hub-components"
       CONNECT_LOG4J_LOGGERS: org.apache.zookeeper=ERROR,org.I0Itec.zkclient=ERROR,org.reflections=ERROR
 
 
+  schema_registry:
+      image: confluentinc/cp-schema-registry:3.3.0
+      hostname: schema_registry
+      container_name: schema_registry
+      depends_on:
+        - zookeeper
+        - kafka
+      ports:
+        - "8081:8081"
+      environment:
+        SCHEMA_REGISTRY_HOST_NAME: schema_registry
+        SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL: 'zookeeper:2181'
+        SCHEMA_REGISTRY_ACCESS_CONTROL_ALLOW_ORIGIN: '*'
+        SCHEMA_REGISTRY_ACCESS_CONTROL_ALLOW_METHODS: 'GET,POST,PUT,OPTIONS'
+      
   zookeeper:
     image: confluentinc/cp-zookeeper:7.3.2
     hostname: zookeeper
@@ -72,6 +90,10 @@ services:
       - 5432:5432
     environment:
       POSTGRES_PASSWORD: admin
+    command:
+      - "postgres"
+      - "-c"
+      - "wal_level=logical"
   
   adminer:
     image: adminer

@@ -23,6 +23,7 @@
         <url>https://packages.confluent.io/maven/</url>
     </repository>
 </repositories>
+<packaging>pom</packaging>
   <dependencies>
     <dependency>
       <groupId>junit</groupId>

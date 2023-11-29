@@ -1,4 +1,4 @@
-curl -i -X PUT -H  "Content-Type:application/json" \
+docker exec -it my-connector curl -i -X PUT -H  "Content-Type:application/json" \
     http://localhost:8083/connectors/my-connector/config/ \
     -d '{
             "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
@@ -15,12 +15,40 @@ curl -i -X PUT -H  "Content-Type:application/json" \
             "database.history.kafka.bootstrap.servers": "kafka:19092",
             "database.history.kafka.topic": "test.demo",
 			"topic.prefix": "Gluon_marketplace",
-            "topic.creation.default.replication.factor": "3",
-            "topic.creation.default.partitions": "3",
+            "topic.creation.default.replication.factor": "1",
+            "topic.creation.default.partitions": "1",
             "decimal.handling.mode": "double",
             "include.schema.changes": "true",
 			"publication.autocreate.mode": "all_tables",
+            "schema.include.list": "test_schema",
 			"tasks.max": "1",
 			"topic.creation.enable": "true",
-			"plugin.name": "pgoutput"
+			"plugin.name": "pgoutput",
+            "transforms": "insertOrigin,insertSchemaRecord,insertEndpoint,renameEndpoint,topicRename,excludeUnnecessariesFields,renameFields",
+            "transforms.insertOrigin.type": "org.apache.kafka.connect.transforms.InsertField$Value",
+            "transforms.insertOrigin.static.field": "origin",
+            "transforms.insertOrigin.static.value": "Gluon Marketplace",
+            "transforms.insertSchemaRecord.type": "org.apache.kafka.connect.transforms.InsertField$Value",
+            "transforms.insertSchemaRecord.static.field": "schemaRecord",
+            "transforms.insertSchemaRecord.static.value": "failSchema",
+            "transforms.insertEndpoint.type" : "com.github.jcustenborder.kafka.connect.transform.common.ExtractNestedField$Value",
+            "transforms.insertEndpoint.input.inner.field.name" : "table",
+            "transforms.insertEndpoint.input.outer.field.name" : "source",
+            "transforms.insertEndpoint.output.field.name" : "table",
+            "transforms.renameEndpoint.type": "org.apache.kafka.connect.transforms.ReplaceField$Value",
+            "transforms.renameEndpoint.renames": "table:endpoint",
+            "transforms.topicRename.type": "org.apache.kafka.connect.transforms.RegexRouter",
+            "transforms.topicRename.regex": "(.*).test_schema(.*)",
+            "transforms.topicRename.replacement": "$1$2",
+            "transforms.excludeUnnecessariesFields.type": "org.apache.kafka.connect.transforms.ReplaceField$Value",
+            "transforms.excludeUnnecessariesFields.exclude": "before,source,op,ts_ms,transaction",
+            "transforms.renameFields.type": "org.apache.kafka.connect.transforms.ReplaceField$Value",
+            "transforms.renameFields.renames": "after:value"
     }'
+
+
+    docker exec -it kafka kafka-console-consumer --bootstrap-server localhost:9092 --topic Gluon_marketplace.test_table
+
+    docker exec -it kafka kafka-topics --list --bootstrap-server localhost:9092
+
+    docker exec -it kafka kafka-topics --delete --bootstrap-server localhost:9092 --topic Gluon_marketplace.test_schema.demo

@@ -1,10 +1,12 @@
+Kafka Connect Command
 docker exec -it my-connector curl -i -X PUT -H  "Content-Type:application/json" \
     http://localhost:8083/connectors/my-connector/config/ \
     -d '{
             "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
-            "value.converter": "org.apache.kafka.connect.json.JsonConverter",
-            "value.converter.schemas.enable": "false",
-			"output.data.format": "JSON",
+            "value.converter": "io.confluent.connect.avro.AvroConverter",
+            "value.converter.schemas.enable": "true",
+            "value.converter.schema.registry.url": "http://schema_registry:8081",
+			"output.data.format": "AVRO",
 			"output.key.format": "JSON",
             "database.hostname": "postgres",
             "database.port": "5432",
@@ -43,12 +45,16 @@ docker exec -it my-connector curl -i -X PUT -H  "Content-Type:application/json" 
             "transforms.excludeUnnecessariesFields.type": "org.apache.kafka.connect.transforms.ReplaceField$Value",
             "transforms.excludeUnnecessariesFields.exclude": "before,source,op,ts_ms,transaction",
             "transforms.renameFields.type": "org.apache.kafka.connect.transforms.ReplaceField$Value",
-            "transforms.renameFields.renames": "after:value"
+            "transforms.renameFields.renames": "endpoint:endpoint,after:value,schemaRecord:schemaRecord,origin:origin"
     }'
 
-
-    docker exec -it kafka kafka-console-consumer --bootstrap-server localhost:9092 --topic Gluon_marketplace.test_table
-
+    Kafka commands
+    docker exec -it kafka kafka-console-consumer --bootstrap-server localhost:9092 --topic Gluon_marketplace.demo
     docker exec -it kafka kafka-topics --list --bootstrap-server localhost:9092
-
     docker exec -it kafka kafka-topics --delete --bootstrap-server localhost:9092 --topic Gluon_marketplace.test_schema.demo
+
+    Schema Registry commands
+    docker exec -it schema_registry curl -X GET http://localhost:8081/subjects
+    docker exec -it schema_registry curl -X POST -H "Content-Type: application/vnd.schemaregistry.v1+json" http://localhost:8081/subjects/Gluon_marketplace.demo-value/versions --data '{"schema": "{ \"namespace\": \"gluon-insights\",\"name\": \"KafkaRecord\",\"type\": \"record\",\"doc\": \"Avro serializer for Kafka records\",\"fields\": [{\"name\": \"endpoint\", \"type\": \"string\"},{\"name\": \"value\", \"type\": \"string\"},{\"name\": \"schemaRecord\", \"type\": \"string\"},{\"name\": \"origin\", \"type\": \"string\"}]}"}'
+    docker exec -it schema_registry curl -X GET http://localhost:8081/schemas/ids/21
+    docker exec -it schema_registry curl -X DELETE http://localhost:8081/subjects/Gluon_marketplace.demo-value
